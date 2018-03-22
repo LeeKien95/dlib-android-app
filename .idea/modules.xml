@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/camera_api/camera_api.iml" filepath="$PROJECT_DIR$/camera_api/camera_api.iml" />
       <module fileurl="file://$PROJECT_DIR$/dlib/dlib.iml" filepath="$PROJECT_DIR$/dlib/dlib.iml" />
       <module fileurl="file://$PROJECT_DIR$/dlib-android-app.iml" filepath="$PROJECT_DIR$/dlib-android-app.iml" />
     </modules>

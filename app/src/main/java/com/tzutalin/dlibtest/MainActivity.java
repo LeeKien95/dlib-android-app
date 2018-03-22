@@ -384,7 +384,7 @@ public class MainActivity extends AppCompatActivity {
             for (Point point : landmarks) {
                 int pointX = (int) (point.x * resizeRatio);
                 int pointY = (int) (point.y * resizeRatio);
-                canvas.drawCircle(pointX, pointY, 2, paint);
+                canvas.drawCircle(pointX, pointY, 1, paint);
             }
         }
 
