@@ -77,8 +77,9 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             // Start the Activity
             camera.takePicture(null, null, pictureCallback);
-            demoFaceDet(picturePath);
+//            demoFaceDet(picturePath);
 //            camera.startPreview();
+            faceDet(picturePath);
         }
     };
 
@@ -236,6 +237,42 @@ public class MainActivity extends AppCompatActivity {
                 return faceList;
             }
         }.execute();
+    }
+
+
+    private void faceDet(final String imgPath) {
+        showDiaglog("Detecting faces");
+        if (mFaceDet == null) {
+            mFaceDet = new FaceDet(Constants.getFaceShapeModelPath());
+        }
+
+        final String targetPath = Constants.getFaceShapeModelPath();
+        if (!new File(targetPath).exists()) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, "Copy landmark model to " + targetPath, Toast.LENGTH_SHORT).show();
+                }
+            });
+            FileUtils.copyFileFromRawToOthers(getApplicationContext(), R.raw.shape_predictor_68_face_landmarks, targetPath);
+        }
+
+        List<VisionDetRet> faceList = mFaceDet.detect(imgPath);
+        float resizeRatio = 1;
+        for (final VisionDetRet ret : faceList) {
+            String label = ret.getLabel(); // If doing face detection, it will be 'Face'
+            int rectLeft = ret.getLeft();
+            int rectTop= ret.getTop();
+            int rectRight = ret.getRight();
+            int rectBottom = ret.getBottom();
+            ArrayList<Point> landmarks = ret.getFaceLandmarks();
+            for (Point point : landmarks) {
+                int pointX = (int) (point.x * resizeRatio);
+                int pointY = (int) (point.y * resizeRatio);
+                // Get the point of the face landmarks
+                System.out.println(pointX + ", " + pointY);
+            }
+        }
     }
 
 

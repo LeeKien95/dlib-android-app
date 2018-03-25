@@ -4,4 +4,7 @@
     <string name="description_info">Select an image or open camera</string>
     <string name="request_permission">This sample needs camera permission.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="capture_button">Capture Image From Camera</string>
+    <string name="desc">capture image place holder</string>
 </resources>
