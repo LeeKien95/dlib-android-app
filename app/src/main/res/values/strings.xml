@@ -7,4 +7,5 @@
     <string name="hello_world">Hello world!</string>
     <string name="capture_button">Capture Image From Camera</string>
     <string name="desc">capture image place holder</string>
+    <string name="start_record">Start</string>
 </resources>
