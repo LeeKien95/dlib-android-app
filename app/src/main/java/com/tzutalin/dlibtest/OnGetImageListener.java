@@ -36,6 +36,7 @@ import android.os.Trace;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
+import android.widget.ImageView;
 
 import com.tzutalin.dlib.Constants;
 import com.tzutalin.dlib.FaceDet;
@@ -52,6 +53,8 @@ import java.util.List;
  */
 public class OnGetImageListener implements OnImageAvailableListener {
     private static final boolean SAVE_PREVIEW_BITMAP = false;
+    public static final String CAMERA_FRONT = "1";
+    public static final String CAMERA_BACK = "0";
 
     private static final int INPUT_SIZE = 224;
     private static final String TAG = "OnGetImageListener";
@@ -73,18 +76,31 @@ public class OnGetImageListener implements OnImageAvailableListener {
     private TrasparentTitleView mTransparentTitleView;
     private FloatingCameraWindow mWindow;
     private Paint mFaceLandmardkPaint;
+    private String cameraId = CAMERA_BACK;
+//    ArrayList<Point> landmarks = ret.getFaceLandmarks();
+    private ArrayList<Point> current_landmarks;
+
+    public ArrayList<Point> getCurrent_landmarks() {
+        return current_landmarks;
+    }
+
+    public void setCurrent_landmarks(ArrayList<Point> current_landmarks) {
+        this.current_landmarks = current_landmarks;
+    }
 
     public void initialize(
             final Context context,
             final AssetManager assetManager,
             final TrasparentTitleView scoreView,
-            final Handler handler) {
+            final Handler handler
+            , final String cameraId) {
         this.mContext = context;
         this.mTransparentTitleView = scoreView;
         this.mInferenceHandler = handler;
+        this.cameraId = cameraId;
+        this.current_landmarks = new ArrayList<Point>();
         mFaceDet = new FaceDet(Constants.getFaceShapeModelPath());
         mWindow = new FloatingCameraWindow(mContext);
-
         mFaceLandmardkPaint = new Paint();
         mFaceLandmardkPaint.setColor(Color.GREEN);
         mFaceLandmardkPaint.setStrokeWidth(2);
@@ -114,7 +130,12 @@ public class OnGetImageListener implements OnImageAvailableListener {
         Log.d(TAG, String.format("screen size (%d,%d)", screen_width, screen_height));
         if (screen_width < screen_height) {
             orientation = Configuration.ORIENTATION_PORTRAIT;
-            mScreenRotation = 90;
+            if(this.cameraId.equals(CAMERA_BACK)) {
+                mScreenRotation = 90;
+            } else if(this.cameraId.equals(CAMERA_FRONT)){
+                mScreenRotation = -90;
+            }
+
         } else {
             orientation = Configuration.ORIENTATION_LANDSCAPE;
             mScreenRotation = 0;
@@ -133,11 +154,15 @@ public class OnGetImageListener implements OnImageAvailableListener {
         final float scaleFactor = dst.getHeight() / minDim;
         matrix.postScale(scaleFactor, scaleFactor);
 
-        // Rotate around the center if necessary.
+//         Rotate around the center if necessary.
         if (mScreenRotation != 0) {
             matrix.postTranslate(-dst.getWidth() / 2.0f, -dst.getHeight() / 2.0f);
             matrix.postRotate(mScreenRotation);
             matrix.postTranslate(dst.getWidth() / 2.0f, dst.getHeight() / 2.0f);
+        }
+
+        if(cameraId.equals(CAMERA_FRONT)) {
+            matrix.postScale(-1, 1, dst.getWidth() / 2.0f, dst.getHeight() / 2.0f);
         }
 
         final Canvas canvas = new Canvas(dst);
@@ -222,7 +247,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
                     @Override
                     public void run() {
                         if (!new File(Constants.getFaceShapeModelPath()).exists()) {
-                            mTransparentTitleView.setText("Copying landmark model to " + Constants.getFaceShapeModelPath());
+//                            mTransparentTitleView.setText("Copying landmark model to " + Constants.getFaceShapeModelPath());
                             FileUtils.copyFileFromRawToOthers(mContext, R.raw.shape_predictor_68_face_landmarks, Constants.getFaceShapeModelPath());
                         }
 
@@ -232,7 +257,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
                             results = mFaceDet.detect(mCroppedBitmap);
                         }
                         long endTime = System.currentTimeMillis();
-                        mTransparentTitleView.setText("Time cost: " + String.valueOf((endTime - startTime) / 1000f) + " sec");
+//                        mTransparentTitleView.setText("Time cost: " + String.valueOf((endTime - startTime) / 1000f) + " sec");
                         // Draw on bitmap
                         if (results != null) {
                             for (final VisionDetRet ret : results) {
@@ -247,6 +272,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
 
                                 // Draw landmark
                                 ArrayList<Point> landmarks = ret.getFaceLandmarks();
+                                setCurrent_landmarks(landmarks);
                                 for (Point point : landmarks) {
                                     int pointX = (int) (point.x * resizeRatio);
                                     int pointY = (int) (point.y * resizeRatio);
