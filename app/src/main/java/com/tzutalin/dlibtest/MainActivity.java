@@ -31,6 +31,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -102,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread inferenceThread;
     private Handler backgroundHandler;
     private HandlerThread backgroundThread;
+    private Handler dataSendingHandler;
 
     private LayoutInflater mLayoutInflater;
     private ImageView mColorView;
@@ -114,7 +116,6 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread mBackgroundThread;
     private final OnGetImageListener mOnGetPreviewListener = new OnGetImageListener();
     private ArrayList<Point> landmarks = new ArrayList<Point>();
-    private int click_count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,20 +134,17 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 //                startActivity(new Intent(MainActivity.this, CameraActivity.class));
                 new GetLandmarks().execute(mOnGetPreviewListener);
-                click_count ++;
-                if(click_count >= 2) {
-                    click_count = 0;
-//                    send data
-                }
+
             }
         });
-
         switchCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 switchCamera();
             }
         });
+
+        Toast.makeText(MainActivity.this, "Make a straight face, then click 'Start'", Toast.LENGTH_SHORT).show();
     }
 
     private class GetLandmarks extends AsyncTask<OnGetImageListener, Void, ArrayList<Point>> {
@@ -168,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
             if(landmarks != null) {
                 Toast.makeText(MainActivity.this, "Landmarks getting successfully.",  Toast.LENGTH_SHORT).show();
 //                Log.e(TAG, "" + landmarks.get(0).toString());
+
             } else {
                 Toast.makeText(MainActivity.this, "Landmarks getting failed.",  Toast.LENGTH_SHORT).show();
             }
@@ -275,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
         inferenceThread = new HandlerThread("InferenceThread");
         inferenceThread.start();
         inferenceHandler = new Handler(inferenceThread.getLooper());
+
     }
 
     @SuppressLint("LongLogTag")
@@ -292,6 +292,26 @@ public class MainActivity extends AppCompatActivity {
             inferenceThread = null;
         } catch (final InterruptedException e) {
             Timber.tag(TAG).e("error", e);
+        }
+    }
+
+    private class DataSendingThread extends HandlerThread {
+
+        Handler handler;
+
+        public DataSendingThread(String name) {
+            super(name);
+        }
+
+        @Override
+        protected void onLooperPrepared() {
+            handler = new Handler(getLooper()) {
+                @Override
+                public void handleMessage(Message msg) {
+                    // process incoming messages here
+                    // this will run in non-ui/background thread
+                }
+            };
         }
     }
 
