@@ -42,7 +42,7 @@ ext {
     releaseVersionName = "${versionMajor}.${versionMinor}.${versionPatch}"
 
     minSdkVersion = 21
-    targetSdkVersion = 25
+    targetSdkVersion = 27
     androidCompileSdkVersion = 27
     androidBuildToolsVersion = '27.0.0'
     androidSupportSdkVersion = '25.3.1'

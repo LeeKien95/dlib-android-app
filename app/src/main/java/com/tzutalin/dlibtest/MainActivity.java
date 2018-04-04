@@ -29,6 +29,7 @@ import android.media.ImageReader;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -50,6 +51,11 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONObject;
 
@@ -76,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String CAMERA_FRONT = "1";
     public static final String CAMERA_BACK = "0";
     private static final int MINIMUM_PREVIEW_SIZE = 320;
+    private static final int REQUEST_CODE_PERMISSION = 2;
     private TrasparentTitleView mScoreView;
 
     private Button startAction;
@@ -110,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread backgroundThread;
     private Handler dataSendingHandler;
     private DataSendingThread backgroundSendingThread;
-
     private LayoutInflater mLayoutInflater;
     private ImageView mColorView;
 
@@ -123,6 +129,12 @@ public class MainActivity extends AppCompatActivity {
     private final OnGetImageListener mOnGetPreviewListener = new OnGetImageListener();
     private ArrayList<Point> current_landmarks = new ArrayList<Point>();
     private ArrayList<Point> base_landmarks = new ArrayList<Point>();
+    private static String[] PERMISSIONS_REQ = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA
+    };
+    private String serverResponse;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,13 +147,20 @@ public class MainActivity extends AppCompatActivity {
         textureView.setSurfaceTextureListener(textureListener);
         startAction = (Button) findViewById(R.id.start_action);
         switchCamera = (ImageButton) findViewById(R.id.change_camera);
+
+        int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+
+        if (currentapiVersion >= Build.VERSION_CODES.M) {
+            verifyPermissions(this);
+        }
+
         assert startAction != null;
         startAction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //                startActivity(new Intent(MainActivity.this, CameraActivity.class));
                 new GetLandmarks().execute(mOnGetPreviewListener);
-
+                startSendingData();
             }
         });
         switchCamera.setOnClickListener(new View.OnClickListener() {
@@ -152,6 +171,27 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Toast.makeText(MainActivity.this, "Make a straight face, then click 'Start'", Toast.LENGTH_SHORT).show();
+    }
+
+    private static boolean verifyPermissions(Activity activity) {
+        // Check if we have write permission
+        int write_permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int read_persmission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int camera_permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA);
+
+        if (write_permission != PackageManager.PERMISSION_GRANTED ||
+                read_persmission != PackageManager.PERMISSION_GRANTED ||
+                camera_permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_REQ,
+                    REQUEST_CODE_PERMISSION
+            );
+            return false;
+        } else {
+            return true;
+        }
     }
 
     private class GetLandmarks extends AsyncTask<OnGetImageListener, Void, ArrayList<Point>> {
@@ -172,6 +212,30 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(MainActivity.this, "Landmarks getting failed.",  Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    private class SendData extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... strings) {
+            String url = strings[0];
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+                    (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Toast.makeText(MainActivity.this, "Response: " + response.toString(), Toast.LENGTH_SHORT).show();
+                            serverResponse = response.toString();
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            // TODO: Handle error
+                            Toast.makeText(MainActivity.this, "Can't get response", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+            // Access the RequestQueue through your singleton class.
+            MySingleton.getInstance(MainActivity.this).addToRequestQueue(jsonObjectRequest);
+            return serverResponse;
         }
     }
 
@@ -311,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
             handler = new Handler(getLooper()) {
                 @Override
                 public void handleMessage(Message msg) {
-
+                    super.handleMessage(msg);
                     // process incoming messages here
                     // this will run in non-ui/background thread
                 }
@@ -322,7 +386,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     new GetLandmarks().execute(mOnGetPreviewListener);
-
+                    // send data volley function here
+                    new SendData().execute("http://10.8.75.135:8089");
                 }
             }, 3000);
         }
@@ -334,88 +399,6 @@ public class MainActivity extends AppCompatActivity {
         dataSendingHandler = new Handler(backgroundSendingThread.getLooper());
     }
 
-    private class HttpAsyncTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... urls) {
-
-            person = new Person();
-            person.setName(etName.getText().toString());
-            person.setCountry(etCountry.getText().toString());
-            person.setTwitter(etTwitter.getText().toString());
-
-            return POST(urls[0],person);
-        }
-        // onPostExecute displays the results of the AsyncTask.
-        @Override
-        protected void onPostExecute(String result) {
-            Toast.makeText(getBaseContext(), "Data Sent!", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    public boolean isConnected(){
-        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Activity.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected())
-            return true;
-        else
-            return false;
-    }
-
-    public static String POST(String url, ArrayList<Point> current_landmarks){
-        InputStream inputStream = null;
-        String result = "";
-        try {
-
-            // 1. create HttpClient
-            HttpClient httpclient = new DefaultHttpClient();
-
-            // 2. make POST request to the given URL
-            HttpPost httpPost = new HttpPost(url);
-
-            String json = "";
-
-            // 3. build jsonObject
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.accumulate("name", person.getName());
-            jsonObject.accumulate("country", person.getCountry());
-            jsonObject.accumulate("twitter", person.getTwitter());
-
-            // 4. convert JSONObject to JSON to String
-            json = jsonObject.toString();
-
-            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
-            // ObjectMapper mapper = new ObjectMapper();
-            // json = mapper.writeValueAsString(person);
-
-            // 5. set json to StringEntity
-            StringEntity se = new StringEntity(json);
-
-            // 6. set httpPost Entity
-            httpPost.setEntity(se);
-
-            // 7. Set some headers to inform server about the type of the content
-            httpPost.setHeader("Accept", "application/json");
-            httpPost.setHeader("Content-type", "application/json");
-
-            // 8. Execute POST request to the given URL
-            HttpResponse httpResponse = httpclient.execute(httpPost);
-
-            // 9. receive response as inputStream
-            inputStream = httpResponse.getEntity().getContent();
-
-            // 10. convert inputstream to string
-            if(inputStream != null)
-                result = convertInputStreamToString(inputStream);
-            else
-                result = "Did not work!";
-
-        } catch (Exception e) {
-            Log.d("InputStream", e.getLocalizedMessage());
-        }
-
-        // 11. return result
-        return result;
-    }
     //end http request block
 
 //    protected void takePicture() {

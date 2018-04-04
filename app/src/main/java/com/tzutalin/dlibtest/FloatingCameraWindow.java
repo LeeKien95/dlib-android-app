@@ -129,7 +129,7 @@ public class FloatingCameraWindow {
     private WindowManager.LayoutParams initWindowParameter() {
         mWindowParam = new WindowManager.LayoutParams();
 
-        mWindowParam.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+        mWindowParam.type = WindowManager.LayoutParams.TYPE_TOAST;
         mWindowParam.format = 1;
         mWindowParam.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         mWindowParam.flags = mWindowParam.flags | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
