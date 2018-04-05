@@ -116,7 +116,6 @@ public class MainActivity extends AppCompatActivity {
     private Handler backgroundHandler;
     private HandlerThread backgroundThread;
     private Handler dataSendingHandler;
-    private DataSendingThread backgroundSendingThread;
     private LayoutInflater mLayoutInflater;
     private ImageView mColorView;
 
@@ -135,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.CAMERA
     };
     private String serverResponse;
+    private boolean isSendingData = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,12 +155,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         assert startAction != null;
+
+        dataSendingHandler = new Handler();
         startAction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //                startActivity(new Intent(MainActivity.this, CameraActivity.class));
-                new GetLandmarks().execute(mOnGetPreviewListener);
-                startSendingData();
+                current_landmarks = getLandmarks(mOnGetPreviewListener);
+                dataSendingHandler.post(sendingDataRunnable);
+                isSendingData = true;
             }
         });
         switchCamera.setOnClickListener(new View.OnClickListener() {
@@ -172,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
 
         Toast.makeText(MainActivity.this, "Make a straight face, then click 'Start'", Toast.LENGTH_SHORT).show();
     }
+
 
     private static boolean verifyPermissions(Activity activity) {
         // Check if we have write permission
@@ -194,31 +198,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class GetLandmarks extends AsyncTask<OnGetImageListener, Void, ArrayList<Point>> {
-        @Override
-        protected ArrayList<Point> doInBackground(OnGetImageListener... onGetImageListeners) {
-            return(onGetImageListeners[0].getCurrent_landmarks());
-//            return null;
-        }
-        @Override
-        protected void onPreExecute() {
-        }
-        @Override
-        protected void onPostExecute(ArrayList<Point> result) {
-            current_landmarks = result;
-            if(current_landmarks != null) {
-                Toast.makeText(MainActivity.this, "Landmarks getting successfully.",  Toast.LENGTH_SHORT).show();
-//                Log.e(TAG, "" + landmarks.get(0).toString());
-            } else {
-                Toast.makeText(MainActivity.this, "Landmarks getting failed.",  Toast.LENGTH_SHORT).show();
-            }
-        }
+    private ArrayList<Point> getLandmarks(OnGetImageListener onGetImageListener) {
+        return onGetImageListener.getCurrent_landmarks();
     }
+
+    private Runnable sendingDataRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // Do something here on the main thread
+            Toast.makeText(MainActivity.this, "Send Data...", Toast.LENGTH_SHORT).show();
+            // Repeat this the same runnable code block again another 2 seconds
+            new SendData().execute("http://192.168.11.64:8088");
+            // 'this' is referencing the Runnable object
+            dataSendingHandler.postDelayed(this, 3000);
+        }
+    };
 
     private class SendData extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... strings) {
             String url = strings[0];
+            Log.e(TAG, "Sending request to:" + url);
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
                     (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
                         @Override
@@ -231,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onErrorResponse(VolleyError error) {
                             // TODO: Handle error
                             Toast.makeText(MainActivity.this, "Can't get response", Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, error.getCause().toString());
                         }
                     });
             // Access the RequestQueue through your singleton class.
@@ -355,51 +356,17 @@ public class MainActivity extends AppCompatActivity {
             inferenceThread.join();
             inferenceThread = null;
             inferenceThread = null;
+
+            if(isSendingData) {
+                dataSendingHandler.removeCallbacks(sendingDataRunnable);
+            }
+            isSendingData = false;
         } catch (final InterruptedException e) {
             Timber.tag(TAG).e("error", e);
         }
     }
 
 
-    // http request to server block of code
-    private class DataSendingThread extends HandlerThread {
-
-        Handler handler;
-
-        public DataSendingThread(String name) {
-            super(name);
-        }
-
-        @Override
-        protected void onLooperPrepared() {
-            handler = new Handler(getLooper()) {
-                @Override
-                public void handleMessage(Message msg) {
-                    super.handleMessage(msg);
-                    // process incoming messages here
-                    // this will run in non-ui/background thread
-                }
-            };
-
-            //delay 3s before sending a json object to server.
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    new GetLandmarks().execute(mOnGetPreviewListener);
-                    // send data volley function here
-                    new SendData().execute("http://10.8.75.135:8089");
-                }
-            }, 3000);
-        }
-    }
-
-    private void startSendingData() {
-        backgroundSendingThread = new DataSendingThread("Background Sending Data");
-        backgroundSendingThread.start();
-        dataSendingHandler = new Handler(backgroundSendingThread.getLooper());
-    }
-
-    //end http request block
 
 //    protected void takePicture() {
 //        if(null == cameraDevice) {
@@ -748,28 +715,6 @@ public class MainActivity extends AppCompatActivity {
         textureView.setTransform(matrix);
     }
 
-//    private void openCamera(String id) {
-//        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-//        Log.e(TAG, "is camera open");
-//        try {
-//            cameraId = id;
-//            Log.e(TAG, cameraId);
-//            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-//            StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-//            assert map != null;
-//            imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
-//            // Add permission for camera and let user grant the permission
-//            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-//                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION);
-//                return;
-//            }
-//            manager.openCamera(cameraId, stateCallback, null);
-//        } catch (CameraAccessException e) {
-//            e.printStackTrace();
-//        }
-//        Log.e(TAG, "openCamera X");
-//    }
-
     private void openCamera(final int width, final int height) {
         setUpCameraOutputs(width, height);
         configureTransform(width, height);
@@ -812,19 +757,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
-//    protected void updatePreview() {
-//        if(null == cameraDevice) {
-//            Log.e(TAG, "updatePreview error, return");
-//        }
-//        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-//        try {
-//            captureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHandler);
-//        } catch (CameraAccessException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     private void closeCamera() {
         try {
