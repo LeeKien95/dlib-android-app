@@ -79,6 +79,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
     private String cameraId = CAMERA_BACK;
 //    ArrayList<Point> landmarks = ret.getFaceLandmarks();
     private ArrayList<Point> current_landmarks;
+    public boolean detected = false;
 
     public ArrayList<Point> getCurrent_landmarks() {
         return current_landmarks;
@@ -260,6 +261,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
 //                        mTransparentTitleView.setText("Time cost: " + String.valueOf((endTime - startTime) / 1000f) + " sec");
                         // Draw on bitmap
                         if (results != null) {
+                            detected = true;
                             for (final VisionDetRet ret : results) {
                                 float resizeRatio = 1.0f;
                                 Rect bounds = new Rect();
@@ -279,6 +281,8 @@ public class OnGetImageListener implements OnImageAvailableListener {
                                     canvas.drawCircle(pointX, pointY, 2, mFaceLandmardkPaint);
                                 }
                             }
+                        } else {
+                            detected = false;
                         }
 
                         mWindow.setRGBBitmap(mCroppedBitmap);
