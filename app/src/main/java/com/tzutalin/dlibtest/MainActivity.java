@@ -228,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
 //            Log.e(TAG, Arrays.toString(getLandmarkChange()));
             Toast.makeText(MainActivity.this, "Send Data...", Toast.LENGTH_SHORT).show();
             // Repeat this the same runnable code block again another 3 seconds
-            new SendData().execute("http://10.8.75.135:8089/predict");
+            new SendData().execute("http://10.8.75.223:8089/predict");
             // 'this' is referencing the Runnable object
             dataSendingHandler.postDelayed(this, 3000);
         }
