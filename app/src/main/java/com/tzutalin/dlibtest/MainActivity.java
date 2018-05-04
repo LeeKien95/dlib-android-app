@@ -47,6 +47,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
+import com.tzutalin.dlib.VisionDetRet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -205,9 +206,40 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+
+
     private double[] getLandmarkChange() {
         if(mOnGetPreviewListener.detected) {
             current_landmarks = getLandmarks(mOnGetPreviewListener);
+
+//            get mean of landmarks
+//            int xMean = 0;
+//            int yMean = 0;
+//            for(int i = 0; i < current_landmarks.size(); i++) {
+//                xMean += current_landmarks.get(i).x;
+//                yMean += current_landmarks.get(i).y;
+//            }
+//            Point mean_perk = new Point(xMean/current_landmarks.size(), yMean/current_landmarks.size());
+//
+//            xMean = 0; yMean = 0;
+//            for(int i = 0; i < base_landmarks.size(); i++) {
+//                xMean += base_landmarks.get(i).x;
+//                yMean += base_landmarks.get(i).y;
+//            }
+//            Point mean_base = new Point(xMean/current_landmarks.size(), yMean/current_landmarks.size());
+//            Log.e(TAG, "Mean base: " + mean_base.x + ", " + mean_base.y);
+//            Log.e(TAG, "Mean perk: " + mean_perk.x + ", " + mean_perk.y);
+            List<VisionDetRet> results = mOnGetPreviewListener.getDetectResults();
+            if (results != null) {
+                for (final VisionDetRet ret : results) {
+                    Log.e(TAG, "Box:" + (-ret.getBottom() + ret.getTop()) + "," + (-ret.getLeft() + ret.getRight()));
+                }
+            } else {
+
+            }
+//
+
+
             double[] landmarkChange = new double[136];
             for(int i = 0; i < current_landmarks.size(); i++) {
                 double tmpX = current_landmarks.get(i).x - base_landmarks.get(i).x;

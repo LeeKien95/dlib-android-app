@@ -79,6 +79,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
     private String cameraId = CAMERA_BACK;
 //    ArrayList<Point> landmarks = ret.getFaceLandmarks();
     private ArrayList<Point> current_landmarks;
+    private List<VisionDetRet> detectResults;
     public boolean detected = false;
 
     public ArrayList<Point> getCurrent_landmarks() {
@@ -87,6 +88,14 @@ public class OnGetImageListener implements OnImageAvailableListener {
 
     public void setCurrent_landmarks(ArrayList<Point> current_landmarks) {
         this.current_landmarks = current_landmarks;
+    }
+
+    public List<VisionDetRet> getDetectResults() {
+        return detectResults;
+    }
+
+    public void setDetectResults(List<VisionDetRet> detectResults) {
+        this.detectResults = detectResults;
     }
 
     public void initialize(
@@ -261,6 +270,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
 //                        mTransparentTitleView.setText("Time cost: " + String.valueOf((endTime - startTime) / 1000f) + " sec");
                         // Draw on bitmap
                         if (results != null) {
+                            setDetectResults(results);
                             detected = true;
                             for (final VisionDetRet ret : results) {
                                 float resizeRatio = 1.0f;
