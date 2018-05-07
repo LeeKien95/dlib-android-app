@@ -206,28 +206,6 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-    private ArrayList<Point> normalizePerkLandmark(ArrayList<Point> landmark) {
-        if(base_landmarks == null) {
-            return null;
-        }
-        Point base_center = base_landmarks.get(30);
-        Point perk_center = base_landmarks.get(30);
-        Point move_vector = new Point(base_center.x - perk_center.x, base_center.y - perk_center.y);
-        ArrayList<Point> tmpLandmark = new ArrayList<Point>();
-        for(int i = 0; i < landmark.size(); i++) {
-            tmpLandmark.add(new Point(landmark.get(i).x + move_vector.x, landmark.get(i).y + move_vector.y));
-        }
-
-        Point scale_neutral = new Point(base_landmarks.get(30).x - base_landmarks.get(27).x, base_landmarks.get(30).y - base_landmarks.get(27).y);
-        Point scale_perk = new Point(landmark.get(30).x - landmark.get(27).x, landmark.get(30).y - landmark.get(27).y);
-        double ratio = Math.sqrt(scale_neutral.x*scale_neutral.x + scale_neutral.y*scale_neutral.y)/Math.sqrt(scale_perk.x*scale_perk.x + scale_perk.y*scale_perk.y);
-        for(int i = 0; i < landmark.size(); i++) {
-            tmpLandmark.get(i).x = (int) ((perk_center.x - landmark.get(i).x)*(1-ratio) + landmark.get(i).x);
-            tmpLandmark.get(i).y = (int) ((perk_center.y - landmark.get(i).y)*(1-ratio) + landmark.get(i).y);
-        }
-        return tmpLandmark;
-    }
-
     private Runnable sendingDataRunnable = new Runnable() {
         @Override
         public void run() {
