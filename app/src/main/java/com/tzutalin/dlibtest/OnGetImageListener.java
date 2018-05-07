@@ -77,9 +77,18 @@ public class OnGetImageListener implements OnImageAvailableListener {
     private FloatingCameraWindow mWindow;
     private Paint mFaceLandmardkPaint;
     private String cameraId = CAMERA_BACK;
-//    ArrayList<Point> landmarks = ret.getFaceLandmarks();
     private ArrayList<Point> current_landmarks;
+    private List<VisionDetRet> results;
+
     public boolean detected = false;
+
+    public List<VisionDetRet> getResults() {
+        return results;
+    }
+
+    public void setResults(List<VisionDetRet> results) {
+        this.results = results;
+    }
 
     public ArrayList<Point> getCurrent_landmarks() {
         return current_landmarks;
@@ -262,6 +271,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
                         // Draw on bitmap
                         if (results != null) {
                             detected = true;
+                            setResults(results);
                             for (final VisionDetRet ret : results) {
                                 float resizeRatio = 1.0f;
                                 Rect bounds = new Rect();
