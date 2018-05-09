@@ -45,5 +45,15 @@
         android:scaleType="centerInside"
         app:srcCompat="@drawable/reload" />
 
+    <Button
+        android:id="@+id/openUserInputDialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/start_action"
+        android:layout_alignBottom="@+id/start_action"
+        android:layout_marginStart="28dp"
+        android:layout_toEndOf="@+id/imageview_landmark"
+        android:text="Fix Ip" />
+
 
 </RelativeLayout>

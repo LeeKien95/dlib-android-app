@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.job.JobInfo;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
@@ -28,6 +29,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Size;
@@ -38,6 +40,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -79,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
     private TrasparentTitleView mScoreView;
 
     private Button startAction;
+    private Button mButton;
     private ImageButton switchCamera;
     private TextureView textureView;
     private int mRatioWidth = 0;
@@ -131,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
     };
     private String serverResponse;
     private boolean isSendingData = false;
+    private String inputIp;
 
 
     @Override
@@ -171,6 +176,38 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 switchCamera();
+            }
+        });
+
+        mButton = (Button) findViewById(R.id.openUserInputDialog);
+        mButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LayoutInflater layoutInflaterAndroid = LayoutInflater.from(MainActivity.this);
+                View mView = layoutInflaterAndroid.inflate(R.layout.user_input_dialog_box, null);
+                AlertDialog.Builder alertDialogBuilderUserInput = new AlertDialog.Builder(MainActivity.this);
+                alertDialogBuilderUserInput.setView(mView);
+
+                final EditText userInputDialogEditText = (EditText) mView.findViewById(R.id.userInputDialog);
+                alertDialogBuilderUserInput
+                        .setCancelable(false)
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialogBox, int id) {
+                                // ToDo get user input here
+                                inputIp = userInputDialogEditText.getText().toString();
+                                Log.e(TAG, inputIp);
+                            }
+                        })
+
+                        .setNegativeButton("Cancel",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialogBox, int id) {
+                                        dialogBox.cancel();
+                                    }
+                                });
+
+                AlertDialog alertDialogAndroid = alertDialogBuilderUserInput.create();
+                alertDialogAndroid.show();
             }
         });
 
@@ -234,10 +271,12 @@ public class MainActivity extends AppCompatActivity {
             // Do something here on the main thread
 //            Log.e(TAG, Arrays.toString(getLandmarkChange()));
             Toast.makeText(MainActivity.this, "Send Data...", Toast.LENGTH_SHORT).show();
-            // Repeat this the same runnable code block again another 3 seconds
-            new SendData().execute("http://192.168.11.64:8089/predict");
+            // Repeat this the same runnable code block again another 2 seconds
+            if(inputIp != null) {
+                new SendData().execute("http://" + inputIp + "/predict");
+            }
             // 'this' is referencing the Runnable object
-            dataSendingHandler.postDelayed(this, 3000);
+            dataSendingHandler.postDelayed(this, 2000);
         }
     };
 
