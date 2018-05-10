@@ -32,6 +32,7 @@ import android.media.Image.Plane;
 import android.media.ImageReader;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Trace;
 import android.util.Log;
 import android.view.Display;
@@ -71,6 +72,9 @@ public class OnGetImageListener implements OnImageAvailableListener {
     private boolean mIsComputing = false;
     private Handler mInferenceHandler;
 
+    private Handler mPauseHander;
+    private HandlerThread mPauseHandlerThread;
+
     private Context mContext;
     private FaceDet mFaceDet;
     private TrasparentTitleView mTransparentTitleView;
@@ -81,6 +85,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
     private List<VisionDetRet> results;
 
     public boolean detected = false;
+    public boolean pause = false;
 
     public List<VisionDetRet> getResults() {
         return results;
@@ -96,6 +101,16 @@ public class OnGetImageListener implements OnImageAvailableListener {
 
     public void setCurrent_landmarks(ArrayList<Point> current_landmarks) {
         this.current_landmarks = current_landmarks;
+    }
+
+    public void pausePreview() {
+        this.pause = true;
+        mInferenceHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                pause = false;
+            }
+        }, 3000);
     }
 
     public void initialize(
@@ -269,6 +284,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
                         long endTime = System.currentTimeMillis();
 //                        mTransparentTitleView.setText("Time cost: " + String.valueOf((endTime - startTime) / 1000f) + " sec");
                         // Draw on bitmap
+                        Log.e(TAG, String.valueOf(pause));
                         if (results != null) {
                             detected = true;
                             setResults(results);
@@ -295,7 +311,9 @@ public class OnGetImageListener implements OnImageAvailableListener {
                             detected = false;
                         }
 
-                        mWindow.setRGBBitmap(mCroppedBitmap);
+                        if(pause == false) {
+                            mWindow.setRGBBitmap(mCroppedBitmap);
+                        }
                         mIsComputing = false;
                     }
                 });
