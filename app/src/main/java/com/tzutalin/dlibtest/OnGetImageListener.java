@@ -84,8 +84,17 @@ public class OnGetImageListener implements OnImageAvailableListener {
     private ArrayList<Point> current_landmarks;
     private List<VisionDetRet> results;
 
+
     public boolean detected = false;
     public boolean pause = false;
+
+    public Bitmap getCroppedBitmap() {
+        return mCroppedBitmap;
+    }
+
+    public void setCroppedBitmap(Bitmap mCroppedBitmap) {
+        this.mCroppedBitmap = mCroppedBitmap;
+    }
 
     public List<VisionDetRet> getResults() {
         return results;

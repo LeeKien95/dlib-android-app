@@ -7,6 +7,8 @@ import android.app.job.JobInfo;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
@@ -31,6 +33,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
@@ -58,6 +61,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -269,12 +273,26 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private String bitmapToBase64(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream .toByteArray();
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+    }
+
+    private Bitmap base64ToBitmap(String b64) {
+        byte[] imageAsBytes = Base64.decode(b64.getBytes(), Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
+    }
+
     private class SendData extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... strings) {
             String url = strings[0];
             Log.e(TAG, "Sending request to:" + url);
             final JSONObject sampleObject = new JSONObject();
+            Bitmap mCroppedBitmap = mOnGetPreviewListener.getCroppedBitmap();
+            String imageString = bitmapToBase64(mCroppedBitmap);
             current_landmarks = getLandmarksThenPause(mOnGetPreviewListener);
             double[] landmarks = new double[136];
             double[] base = new double[136];
@@ -291,6 +309,7 @@ public class MainActivity extends AppCompatActivity {
                     base[2*i+1] = base_landmarks.get(i).y;
                 }
                 sampleObject.put("landmark_neutral", new JSONArray(base));
+                sampleObject.put("image_data", imageString);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
