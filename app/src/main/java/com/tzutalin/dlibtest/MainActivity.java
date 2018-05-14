@@ -322,7 +322,20 @@ public class MainActivity extends AppCompatActivity {
                 public void onResponse(JSONObject response) {
                     Log.d(TAG,"User creation completed successfully");
                     // Go to next activity
-                    Toast.makeText(MainActivity.this, "Response: " + response, Toast.LENGTH_LONG).show();
+                    String response_text = "";
+                    try {
+                        String emotion = response.getString("emotion");
+                        JSONArray name = (JSONArray) response.get("subject_names");
+                        response_text = name.getString(0) + " ";
+                        for(int i = 1; i< name.length(); i++) {
+                            response_text += "or " + name.getString(i) + " ";
+                        }
+                        response_text += "is feeling " + emotion;
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Response Error");
+                        e.printStackTrace();
+                    }
+                    Toast.makeText(MainActivity.this, response_text, Toast.LENGTH_LONG).show();
                 }
             },new Response.ErrorListener(){
                 @Override
