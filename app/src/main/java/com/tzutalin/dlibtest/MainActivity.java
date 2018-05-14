@@ -291,8 +291,11 @@ public class MainActivity extends AppCompatActivity {
             String url = strings[0];
             Log.e(TAG, "Sending request to:" + url);
             final JSONObject sampleObject = new JSONObject();
-            Bitmap mCroppedBitmap = mOnGetPreviewListener.getCroppedBitmap();
-            String imageString = bitmapToBase64(mCroppedBitmap);
+            String imageString = "";
+            ArrayList<Bitmap> faceImages = mOnGetPreviewListener.getFaceImages();
+            if(faceImages.size() > 0) {
+                imageString = bitmapToBase64(faceImages.get(0));
+            }
             current_landmarks = getLandmarksThenPause(mOnGetPreviewListener);
             double[] landmarks = new double[136];
             double[] base = new double[136];
@@ -319,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onResponse(JSONObject response) {
                     Log.d(TAG,"User creation completed successfully");
                     // Go to next activity
-                    Toast.makeText(MainActivity.this, "Response: " + response, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Response: " + response, Toast.LENGTH_LONG).show();
                 }
             },new Response.ErrorListener(){
                 @Override

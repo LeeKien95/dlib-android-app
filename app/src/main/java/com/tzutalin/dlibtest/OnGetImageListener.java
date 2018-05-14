@@ -68,6 +68,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
     private int[] mRGBBytes = null;
     private Bitmap mRGBframeBitmap = null;
     private Bitmap mCroppedBitmap = null;
+    private ArrayList<Bitmap> faceImages = null;
 
     private boolean mIsComputing = false;
     private Handler mInferenceHandler;
@@ -88,12 +89,8 @@ public class OnGetImageListener implements OnImageAvailableListener {
     public boolean detected = false;
     public boolean pause = false;
 
-    public Bitmap getCroppedBitmap() {
-        return mCroppedBitmap;
-    }
-
-    public void setCroppedBitmap(Bitmap mCroppedBitmap) {
-        this.mCroppedBitmap = mCroppedBitmap;
+    public ArrayList<Bitmap> getFaceImages() {
+        return faceImages;
     }
 
     public List<VisionDetRet> getResults() {
@@ -133,6 +130,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
         this.mInferenceHandler = handler;
         this.cameraId = cameraId;
         this.current_landmarks = new ArrayList<Point>();
+        this.faceImages = new ArrayList<Bitmap>();
         mFaceDet = new FaceDet(Constants.getFaceShapeModelPath());
         mWindow = new FloatingCameraWindow(mContext);
         mFaceLandmardkPaint = new Paint();
@@ -295,6 +293,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
                         // Draw on bitmap
                         Log.e(TAG, String.valueOf(pause));
                         if (results != null) {
+                            faceImages.clear();
                             detected = true;
                             setResults(results);
                             for (final VisionDetRet ret : results) {
@@ -304,6 +303,12 @@ public class OnGetImageListener implements OnImageAvailableListener {
                                 bounds.top = (int) (ret.getTop() * resizeRatio);
                                 bounds.right = (int) (ret.getRight() * resizeRatio);
                                 bounds.bottom = (int) (ret.getBottom() * resizeRatio);
+                                Log.e(TAG, "Bound size:" + bounds.left + "," + bounds.top + "," + bounds.right + "," + bounds.bottom);
+                                Log.e(TAG, "Bound.width:" + bounds.width() + " Bound.height:" + bounds.height());
+                                if(bounds.left > 0 && bounds.top > 0 && bounds.left + bounds.width() <= mCroppedBitmap.getWidth() && bounds.top + bounds.height() <= mCroppedBitmap.getHeight()) {
+                                    Bitmap face = Bitmap.createBitmap(mCroppedBitmap, bounds.left, bounds.top , bounds.width(), bounds.height());
+                                    faceImages.add(face);
+                                }
                                 Canvas canvas = new Canvas(mCroppedBitmap);
                                 canvas.drawRect(bounds, mFaceLandmardkPaint);
 
@@ -326,6 +331,8 @@ public class OnGetImageListener implements OnImageAvailableListener {
                         mIsComputing = false;
                     }
                 });
+
+
 
         Trace.endSection();
     }
