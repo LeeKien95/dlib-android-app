@@ -173,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Make a straight face, then click 'Start', Again.", Toast.LENGTH_LONG).show();
                     base_landmarks = getLandmarks(mOnGetPreviewListener);
                 }
+                Toast.makeText(MainActivity.this, "Show Your Emotion", Toast.LENGTH_SHORT).show();
                 dataSendingHandler.postDelayed(sendingDataRunnable,2500);
                 isSendingData = true;
             }
@@ -262,7 +263,6 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             // Do something here on the main thread
 //            Log.e(TAG, Arrays.toString(getLandmarkChange()));
-            Toast.makeText(MainActivity.this, "Show Your Emotion", Toast.LENGTH_SHORT).show();
             // Repeat this the same runnable code block again another 2 seconds
             if(inputIp != null) {
                 new SendData().execute("http://" + inputIp + "/predict");
@@ -327,9 +327,6 @@ public class MainActivity extends AppCompatActivity {
                         String emotion = response.getString("emotion");
                         JSONArray name = (JSONArray) response.get("subject_names");
                         response_text = name.getString(0) + " ";
-                        for(int i = 1; i< name.length(); i++) {
-                            response_text += "or " + name.getString(i) + " ";
-                        }
                         response_text += "is feeling " + emotion;
                     } catch (JSONException e) {
                         Log.e(TAG, "Response Error");
