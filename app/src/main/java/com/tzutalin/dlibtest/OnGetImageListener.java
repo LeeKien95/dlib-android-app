@@ -305,8 +305,8 @@ public class OnGetImageListener implements OnImageAvailableListener {
                                 bounds.bottom = (int) (ret.getBottom() * resizeRatio);
                                 Log.e(TAG, "Bound size:" + bounds.left + "," + bounds.top + "," + bounds.right + "," + bounds.bottom);
                                 Log.e(TAG, "Bound.width:" + bounds.width() + " Bound.height:" + bounds.height());
-                                if(bounds.left > 0 && bounds.top > 0 && bounds.left + bounds.width() <= mCroppedBitmap.getWidth() && bounds.top + bounds.height() <= mCroppedBitmap.getHeight()) {
-                                    Bitmap face = Bitmap.createBitmap(mCroppedBitmap, bounds.left, bounds.top , bounds.width(), bounds.height());
+                                if(bounds.left > 5 && bounds.top > 5 && bounds.left + bounds.width() + 10 <= mCroppedBitmap.getWidth() && bounds.top + bounds.height() +10 <= mCroppedBitmap.getHeight()) {
+                                    Bitmap face = Bitmap.createBitmap(mCroppedBitmap, bounds.left -5, bounds.top -5, bounds.width() +10, bounds.height() +10);
                                     faceImages.add(face);
                                 }
                                 Canvas canvas = new Canvas(mCroppedBitmap);

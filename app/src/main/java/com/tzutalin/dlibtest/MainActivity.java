@@ -323,15 +323,37 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG,"User creation completed successfully");
                     // Go to next activity
                     String response_text = "";
-                    try {
-                        String emotion = response.getString("emotion");
-                        JSONArray name = (JSONArray) response.get("subject_names");
-                        response_text = name.getString(0) + " ";
-                        response_text += "is feeling " + emotion;
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Response Error");
-                        e.printStackTrace();
+
+//                    get subjects name
+                    if(response.has("subject_names")) {
+                        try {
+                            JSONArray name = (JSONArray) response.get("subject_names");
+                            response_text = name.getString(0) + " is feeling ";
+                        } catch (JSONException e) {
+//                            Log.e(TAG, "Cant Recognize face");
+//                            response_text += "Unknown face is feeling ";
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Log.e(TAG, "Cant Recognize face");
+                        response_text += "Unknown face is feeling ";
                     }
+
+//                    get emotion
+                    if(response.has("emotion")) {
+                        try {
+                            String emotion = response.getString("emotion");
+                            response_text += emotion;
+                        } catch (JSONException e) {
+//                            Log.e(TAG, "Can't find Emotion");
+//                            response_text += "some thing we can't recognize, sorry";
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Log.e(TAG, "Can't find Emotion");
+                        response_text += "some thing we can't recognize, sorry";
+                    }
+
                     Toast.makeText(MainActivity.this, response_text, Toast.LENGTH_LONG).show();
                 }
             },new Response.ErrorListener(){
