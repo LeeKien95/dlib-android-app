@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
         textureView.setSurfaceTextureListener(textureListener);
         startAction = (Button) findViewById(R.id.start_action);
         switchCamera = (ImageButton) findViewById(R.id.change_camera);
+        inputIp = "chpc.dtdns.net:8088";
 
         int currentapiVersion = android.os.Build.VERSION.SDK_INT;
 
